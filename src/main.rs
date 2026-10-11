@@ -163,6 +163,7 @@ fn cli_help() -> String {
 
 fn cli_status() -> String {
     let cfg = resolve();
+    let key_src = cfg.api_key.is_some().then(key_source_label).unwrap_or_default();
     let probe = match probe_models(&cfg) {
         Ok(rows) => format!("{} models", rows.len()),
         Err(e) => format!("unreachable ({e})"),
@@ -170,8 +171,22 @@ fn cli_status() -> String {
     format!(
         "{DISPLAY}\n  base: {}\n  key:  {}\n  probe: {probe}",
         cfg.upstream_base,
-        if cfg.api_key.is_some() { "set" } else { "none (ok for local)" },
+        if cfg.api_key.is_some() {
+            key_src.as_str()
+        } else {
+            "none (ok for local)"
+        },
     )
+}
+
+/// Which rung of the credential ladder answered — shown in `status` so
+/// "set" never leaves the user guessing where the key lives.
+fn key_source_label() -> String {
+    if std::env::var(ENV_KEY).ok().filter(|s| !s.is_empty()).is_some() {
+        format!("env {ENV_KEY}")
+    } else {
+        "config api_key".to_string()
+    }
 }
 
 fn run_cli(argv: &[String]) -> Result<String, String> {
@@ -229,6 +244,11 @@ fn handle(intents: &Intents, method: &str, params: &Value) -> Value {
                 .as_array()
                 .map(|a| a.iter().filter_map(Value::as_str).map(str::to_string).collect())
                 .unwrap_or_default();
+            // Bare `/<name>`: empty result — the host's provider-login
+            // shortcut switches the session (subscription-plugin convention).
+            if argv.is_empty() {
+                return json!({"result": {}});
+            }
             match run_cli(&argv) {
                 Ok(text) => json!({"result": {"text": text}}),
                 Err(e) => json!({"result": {"text": e}}),
