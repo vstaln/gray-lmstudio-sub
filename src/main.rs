@@ -28,11 +28,6 @@ const ENV_KEY: &str = "LMSTUDIO_API_KEY";
 /// host still wants a number for its cold-cache notices. 0 = unknown.
 const CACHE_TTL_SECS: u64 = 0;
 
-/// Static catalog used only when the /models probe can't reach a server.
-const FALLBACK_MODELS: &[&str] = &[
-    "local-model",
-];
-
 fn manifest() -> Value {
     json!({
         "name": NAME,
@@ -119,18 +114,22 @@ fn provider_models(params: &Value) -> Result<Value, Value> {
     }
     match probe_models(&cfg) {
         Ok(rows) if !rows.is_empty() => Ok(json!({"models": rows})),
-        Ok(_) | Err(_) => {
-            let rows: Vec<Value> = FALLBACK_MODELS
-                .iter()
-                .map(|id| json!({"id": id, "name": id}))
-                .collect();
-            if rows.is_empty() {
-                Err(err("unavailable",
-                    format!("couldn't list models from {}", cfg.upstream_base), true))
-            } else {
-                Ok(json!({"models": rows}))
-            }
-        }
+        Ok(_) => Err(err(
+            "unavailable",
+            format!(
+                "{DISPLAY} at {} lists no models — load one in LM Studio",
+                cfg.upstream_base
+            ),
+            true,
+        )),
+        Err(e) => Err(err(
+            "unavailable",
+            format!(
+                "can't reach {DISPLAY} at {} — is the server running? ({e})",
+                cfg.upstream_base
+            ),
+            true,
+        )),
     }
 }
 
