@@ -137,6 +137,14 @@ fn provider_models(params: &Value) -> Result<Value, Value> {
 fn provider_chat(intents: &Intents, params: &Value) -> Result<Value, Value> {
     let model = params["model"].as_str().unwrap_or_default().to_string();
     let cfg = Arc::new(resolve());
+    probe_models(&cfg).map_err(|e| {
+        err(
+            "unavailable",
+            format!("can't reach {DISPLAY} at {} — is the server running? ({e})",
+                cfg.upstream_base),
+            true,
+        )
+    })?;
     let turn = compat_turn(cfg, None);
     let (relay_url, relay_token) = relay::mint_turn(intents, &model, turn, TOKEN_PREFIX)
         .map_err(|e| err("unavailable", e, true))?;
