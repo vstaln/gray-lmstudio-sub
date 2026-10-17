@@ -175,7 +175,7 @@ dependencies = [
 
 [[package]]
 name = "gray-lmstudio-sub"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "gray-acp-bridge",
  "gray-openai-compat",
