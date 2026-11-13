@@ -40,6 +40,7 @@ fn manifest() -> Value {
             &["models", "chat"], CACHE_TTL_SECS,
         )],
         "commands": ["/lmstudio"],
+        "command_descriptions": {"/lmstudio": "switch to LM Studio models"},
         "subcommands": ["lmstudio"],
     })
 }
