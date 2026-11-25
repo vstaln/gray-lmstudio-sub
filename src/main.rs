@@ -1,7 +1,7 @@
 //! lmstudio-sub — Gray provider sidecar for LM Studio (local).
 //!
 //! Host speaks OpenAI-Responses to a per-turn loopback relay
-//! (`acp_bridge::relay`); `openai_compat` translates to the upstream
+//! (`gray_acp::relay`); `openai_compat` translates to the upstream
 //! OpenAI-compatible /chat/completions endpoint.
 //!
 //! Config: ~/.gray/lmstudio/config.json  {"base_url","api_key"}
@@ -10,8 +10,8 @@
 use std::io::{BufRead, Write};
 use std::sync::Arc;
 
-use acp_bridge::manifest as pmanifest;
-use acp_bridge::relay::{self, Intents};
+use gray_acp::manifest as pmanifest;
+use gray_acp::relay::{self, Intents};
 use openai_compat::{compat_turn, credential_key, probe_models, Compat};
 use serde_json::{json, Value};
 
